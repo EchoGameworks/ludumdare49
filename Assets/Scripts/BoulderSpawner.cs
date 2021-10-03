@@ -34,6 +34,7 @@ public class BoulderSpawner : MonoBehaviour
                     bGO.transform.localScale = Vector3.zero;
                     LeanTween.scale(bGO, Vector3.one, 0.3f).setEaseInOutCirc();
                     bGO.GetComponent<Rigidbody2D>().AddForce(bGO.transform.up * 100f, ForceMode2D.Impulse);
+                    AudioManager.instance.PlaySound(AudioManager.SoundEffects.Boulder);
                 }
                 );
             delayTime += 0.3f;

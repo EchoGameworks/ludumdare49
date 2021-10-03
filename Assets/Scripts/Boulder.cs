@@ -26,6 +26,7 @@ public class Boulder : IHoldable
         }
 
         float impact = impulse / Time.fixedDeltaTime / dropDampening;
+        if (collision.gameObject.tag == "Player") impact *= 1.5f;
         TakeDamage(impact);
         //Debug.Log(impact);
     }
@@ -38,19 +39,8 @@ public class Boulder : IHoldable
             GameObject explosionGO = Instantiate(DestroyedAnimation, this.transform.position, Quaternion.Euler(0f, 0f, Random.Range(0.0f, 360.0f)), null);
             explosionGO.GetComponent<SpriteRenderer>().color = Helpers.GetElementColor(ElementTypes.Earth);
             Destroy(explosionGO, 0.4f);
-            Destroy(gameObject);
-            //CreateCombo();
+            Destroy(gameObject);            
         }
-        else if (Health > 30f && Health <= 65f)
-        {
-            //DamageStatus = DamagedAmount.Small;
-            //GlassDamageSmall.SetActive(true);
-        }
-        else if (Health <= 30f)
-        {
-            //DamageStatus = DamagedAmount.Large;
-           // GlassDamageSmall.SetActive(false);
-            //GlassDamageLarge.SetActive(true);
-        }
+
     }
 }

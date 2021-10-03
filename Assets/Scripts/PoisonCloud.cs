@@ -41,7 +41,15 @@ public class PoisonCloud : MonoBehaviour
             goblin.RemovePoison(this);
         }
         LeanTween.scale(gameObject, Vector3.zero, 0.5f).setEaseInOutCirc()
-            .setOnComplete(() =>
-                Destroy(this.gameObject));
+            .setOnComplete(() => FinalDeath()
+                );
+    }
+
+    private void FinalDeath()
+    {
+        if(this.gameObject != null)
+        {
+            Destroy(this.gameObject);
+        }
     }
 }

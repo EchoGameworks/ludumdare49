@@ -19,7 +19,7 @@ public class Beaker : IHoldable
     private GameObject GlassDamageLarge;
     public Rigidbody2D rb2d;
 
-    private float dropDampening = 200f;
+    private float dropDampening = 150f;
 
     [SerializeField]
     GameObject DestroyedAnimation;
@@ -30,10 +30,12 @@ public class Beaker : IHoldable
 
     public bool IsInCombo = false;
 
+    private float sleepTimer;
+
      void Awake()
     {
-        Element = (ElementTypes)Random.Range(4, 4); //0,4
-        waveSR.color = Helpers.GetElementColor(Element);        
+        Element = (ElementTypes)Random.Range(0, 5); //0,4
+        SetElement(Element);
         Health = 100f;
         DamageStatus = DamagedAmount.None;
         GlassDamageSmall.SetActive(false);
@@ -42,6 +44,11 @@ public class Beaker : IHoldable
         rb2d = GetComponent<Rigidbody2D>();        
     }
 
+    public void SetElement(ElementTypes et)
+    {
+        
+        waveSR.color = Helpers.GetElementColor(Element);
+    }
     
     void Update()
     {
@@ -50,10 +57,29 @@ public class Beaker : IHoldable
         {
             this.transform.position = followPosition.position;
         }
+
+        if (wasThrown)
+        {
+            if (rb2d.velocity.magnitude > 0.3f)
+            {
+                //Still moving a lot
+                sleepTimer = 0.5f;
+            }
+            else if (sleepTimer < 0f)
+            {
+                //print("isSleeping");
+                wasThrown = false;
+            }
+            else
+            {
+                sleepTimer -= Time.deltaTime;
+            }
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        
         float impulse = 0F;
         foreach (ContactPoint2D point in collision.contacts)
         {
@@ -61,17 +87,46 @@ public class Beaker : IHoldable
         }
 
         float impact = impulse / Time.fixedDeltaTime / dropDampening;
-        TakeDamage(impact);
+        IHoldable iHold = collision.gameObject.GetComponent<IHoldable>();
+        if (collision.gameObject.tag == "Player")
+        {
+            TakeDamage(impact * 1.6f, true);           
+        }
+        else if(iHold != null)
+        {
+            TakeDamage(impact, true);
+        }
+        else
+        {
+            TakeDamage(impact, false);
+        }
         //Debug.Log(impact);
     }
 
-    public void TakeDamage(float dmg)
+    public void TakeDamage(float dmg, bool isPlayer)
     {
         if (IsInCombo) return;
         Health -= dmg;
-        if(Health < 0f)
+        if (dmg > 10f)
         {
-            CreateCombo();
+            int soundNum = Random.Range(0, 3);
+            if(soundNum == 0)
+            {
+                AudioManager.instance.PlaySound(AudioManager.SoundEffects.GlassTink);
+            }
+            else if(soundNum == 1)
+            {
+                AudioManager.instance.PlaySound(AudioManager.SoundEffects.GlassTink2);
+            }
+            else
+            {
+                AudioManager.instance.PlaySound(AudioManager.SoundEffects.GlassTink3);
+            }
+            
+        }
+        if (Health < 0f)
+        {
+            CreateCombo(isPlayer);
         }
         else if(Health > 30f && Health <= 65f)
         {
@@ -86,7 +141,7 @@ public class Beaker : IHoldable
         }
     }
 
-    private void CreateCombo()
+    private void CreateCombo(bool isPlayer)
     {
         //print("creating combo: " + Element.ToString());
 
@@ -99,16 +154,18 @@ public class Beaker : IHoldable
         //print("Beakers Touching: " + BeakersConnected.Count);
 
         Score score = new Score(Element, BeakersConnected.Count);
-        HUDManager.instance.UpdateScore(score);
+        if(isPlayer) HUDManager.instance.UpdateScore(score);
         for (int i = BeakersConnected.Count - 1; i > 0; i--)
         {
             BeakersConnected[i].PlayBreak();
         }
 
+
+        //print("should be invoking reaction: " + Element);
         switch (score.Element)
         {
-            case ElementTypes.Fire:
-                FireballManager.instance.SpawnFireballs(score);
+            case ElementTypes.Fire:               
+                FireballManager.instance.SpawnFireballs(score);                
                 break;
             case ElementTypes.Electricity:
                 GameObject blGO = Instantiate(prefabBallLightening, this.transform.position, Quaternion.identity, null);
@@ -121,11 +178,13 @@ public class Beaker : IHoldable
             case ElementTypes.Ice:
                 GameObject player = GameObject.FindGameObjectWithTag("Player");
                 player.GetComponent<Goblin>().Freeze(score);
+                AudioManager.instance.PlaySound(AudioManager.SoundEffects.Freeze);
                 break;
             case ElementTypes.Poison:
                 GameObject pcmGO = Instantiate(prefabPoisonCloudManager, this.transform.position, Quaternion.identity, null);
                 PoisonCloudManager pcm = pcmGO.GetComponent<PoisonCloudManager>();
                 pcm.SpawnCloud(score);
+                AudioManager.instance.PlaySound(AudioManager.SoundEffects.Poison);
                 break;
         }
 
@@ -134,7 +193,7 @@ public class Beaker : IHoldable
 
     public void TouchingBeakers(List<Beaker> connectedBeakers)
     {
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(this.transform.position, 1.1f);
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(this.transform.position, 1.07f);
         foreach(Collider2D c2D in colliders)
         {
             Beaker b = c2D.GetComponent<Beaker>();
@@ -153,6 +212,7 @@ public class Beaker : IHoldable
     {
         if (DestroyedAnimation != null)
         {
+            AudioManager.instance.PlaySound(AudioManager.SoundEffects.GlassBreak);
             GameObject explosionGO = Instantiate(DestroyedAnimation, this.transform.position, Quaternion.Euler(0f, 0f, Random.Range(0.0f, 360.0f)), null);
             explosionGO.GetComponent<SpriteRenderer>().color = Helpers.GetElementColor(Element);            
         }

@@ -17,7 +17,7 @@ public class PoisonCloudManager : MonoBehaviour
     public void SpawnCloud(Score score)
     {
         bc2d = GetComponent<BoxCollider2D>();
-        bc2d.size = new Vector2(1 + score.Value / 6f, 1 + score.Value / 6f);
+        bc2d.size = new Vector2(1 + score.Value / 6f, 1 + score.Value / 4f);
 
         for (int i = 0; i <= score.Value; i++)
         {

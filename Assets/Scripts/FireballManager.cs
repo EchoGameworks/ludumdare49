@@ -30,6 +30,7 @@ public class FireballManager : MonoBehaviour
 
     public void SpawnFireballs(Score score)
     {
+        //print("firing balls: " + score);
         List<Transform> availableSpots = new List<Transform>(SpawnPoints);
         int directionBool = Random.Range(0, 2);
         Vector3 direction = new Vector3(0f, 0f, 180f + 45f);
@@ -43,7 +44,8 @@ public class FireballManager : MonoBehaviour
             int index = Random.Range(0, availableSpots.Count - 1);
             Transform spawnPoint = availableSpots[index];
             availableSpots.RemoveAt(index);
-            GameObject fireGO = Instantiate(prefabFireball, spawnPoint.position, Quaternion.Euler(direction));            
+            GameObject fireGO = Instantiate(prefabFireball, spawnPoint.position, Quaternion.Euler(direction));
+            AudioManager.instance.PlaySound(AudioManager.SoundEffects.FireSpawn);
         }
     }
 }

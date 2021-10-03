@@ -26,35 +26,44 @@ public class GameManager : MonoBehaviour
         
     }
 
-    //public void TriggerReaction(Score score)
-    //{
-    //    switch (score.Element)
-    //    {
-    //        case ElementTypes.Earth:
+    private void Start()
+    {
+        SceneManager.LoadScene("Level", LoadSceneMode.Additive);
+        ctrl.Menu.Restart.performed += Restart_performed;
+    }
 
-    //            for(int i = 0; i <= score.Value; i++)
-    //            {
-    //                GameObject bGO = Instantiate(prefabBoulder, boulderSpawnPoint.position, Quaternion.Euler(0f, 0f, Random.Range(0.0f, 360.0f)), MiscHolder);
-    //                bGO.GetComponent<Rigidbody2D>().AddForce(bGO.transform.up * 40f, ForceMode2D.Impulse);
-    //            }
-    //            return;
-    //    }
-    //}
+    private void Restart_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    {
+        Restart();
+    }
+
+    private void Restart()
+    {
+        Destroy(BeakerManager.instance.gameObject);
+        Destroy(FireballManager.instance.gameObject);
+        Destroy(BoulderSpawner.instance.gameObject);
+        SceneManager.UnloadSceneAsync("Level");
+        SceneManager.LoadScene("Level");
+        HUDManager.instance.NewGame();
+        GameoverHUD.instance.HideGameOver();
+    }
 
     public void GameOver()
     {
         //Scene levelScene = SceneManager.GetSceneByName("Level");
         print("Gameover in Manager");
-        SceneManager.LoadScene("Level");
+        BeakerManager.instance.enabled = false;
+        GameoverHUD.instance.ShowGameover();
+        ctrl.Player.Disable();
     }
 
     private void OnEnable()
     {
-        ctrl.Player.Enable();
+        ctrl.Menu.Enable();
     }
 
     private void OnDisable()
     {
-        ctrl.Player.Disable();
+        ctrl.Menu.Disable();
     }
 }

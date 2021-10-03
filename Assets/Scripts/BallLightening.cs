@@ -5,7 +5,7 @@ using UnityEngine;
 public class BallLightening : MonoBehaviour
 {
     GameObject player;
-    float startingMoveSpeed = 0;
+    float startingMoveSpeed = 0.5f;
     float accelerationAmount = 0.005f;
     float moveSpeed;
     private float scoreMulti = 1f;
@@ -28,12 +28,13 @@ public class BallLightening : MonoBehaviour
         player = GameObject.FindGameObjectWithTag("Player");
         transform.localScale = Vector3.zero;
         LeanTween.scale(gameObject, Vector3.one, 0.3f);
-        LeanTween.moveLocalY(gameObject, 3f, 1f).setOnComplete(() =>
+        LeanTween.moveLocalY(gameObject, 1.5f, 1f).setOnComplete(() =>
             {
                 c2d.enabled = true;
                 Prep = false;
             });       
         moveSpeed = startingMoveSpeed;
+        AudioManager.instance.PlaySound(AudioManager.SoundEffects.EBall);
     }
 
     public void SetScoreMulti(int val)
@@ -54,7 +55,7 @@ public class BallLightening : MonoBehaviour
         {
             DestroySelf();
         }
-        moveSpeed += accelerationAmount * scoreMulti / 6f;
+        moveSpeed += accelerationAmount * scoreMulti / 3f;
         if (moveSpeed > 5f) moveSpeed = 5f;   
         //print("moveSpeed: " + moveSpeed);
         //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(player.transform.position - transform.position), rotationSpeed * Time.deltaTime);

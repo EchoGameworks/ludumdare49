@@ -33,7 +33,7 @@ public class Goblin : MonoBehaviour
     public float drag_Grounded = 1f;
     public float drag_Jump = 1f;
     public float fallMultiplier = 3.2f;
-    public float ThrowPower = 40f;
+    public float ThrowPower = 35f;
 
     [SerializeField]
     private LayerMask layerObstacle;
@@ -41,7 +41,7 @@ public class Goblin : MonoBehaviour
     private Transform holdPositionTransform;
     public GameObject HeldItem;
     private Rigidbody2D HeldItemRB2D;
-    private Beaker HeldItemBeakerScript;
+    private IHoldable HeldItemScript;
 
     [SerializeField]
     private List<PoisonCloud> poisonList;
@@ -64,6 +64,22 @@ public class Goblin : MonoBehaviour
         ctrl.Player.Action.performed += Action_performed;
         ctrl.Player.Move.canceled += Move_canceled;
         poisonList = new List<PoisonCloud>();
+    }
+
+    private void OnDisable()
+    {
+        ctrl.Player.Move.performed -= Move_performed;
+        ctrl.Player.Jump.performed -= Jump_performed;
+        ctrl.Player.Action.performed -= Action_performed;
+        ctrl.Player.Move.canceled -= Move_canceled;
+    }
+
+    private void OnDestroy()
+    {
+        ctrl.Player.Move.performed -= Move_performed;
+        ctrl.Player.Jump.performed -= Jump_performed;
+        ctrl.Player.Action.performed -= Action_performed;
+        ctrl.Player.Move.canceled -= Move_canceled;
     }
 
     private void Move_canceled(InputAction.CallbackContext obj)
@@ -108,13 +124,13 @@ public class Goblin : MonoBehaviour
             if(HeldItemRB2D != null)
             {
                 HeldItem = HeldItemRB2D.gameObject;
-                HeldItemBeakerScript = HeldItem.GetComponent<Beaker>();
+                HeldItemScript = HeldItem.GetComponent<IHoldable>();
                 HeldItemRB2D.isKinematic = true;
                 LeanTween.move(HeldItem, holdPositionTransform, 0.3f).setEaseInOutCirc()
-                    .setOnComplete(() => HeldItemBeakerScript.followPosition = holdPositionTransform);
+                    .setOnComplete(() => HeldItemScript.followPosition = holdPositionTransform);
                 //HeldItem.transform.parent = this.transform;
                 anim.SetBool("IsHolding", true);
-                print("picked up:" + HeldItem);
+                //print("picked up:" + HeldItem);
             }            
         }
     }
@@ -125,8 +141,8 @@ public class Goblin : MonoBehaviour
             HeldItem = HeldItemRB2D.gameObject;
             HeldItemRB2D.isKinematic = false;
             anim.SetBool("IsHolding", false);
-            HeldItemBeakerScript.followPosition = null;
-            
+            HeldItemScript.followPosition = null;
+            HeldItemScript.wasThrown = true;
             if (m_FacingRight && move != 0)
             {
                 HeldItemRB2D.AddForce((gameObject.transform.up - gameObject.transform.right) * ThrowPower, ForceMode2D.Impulse);
@@ -141,12 +157,13 @@ public class Goblin : MonoBehaviour
             }
             HeldItem = null;
             HeldItemRB2D = null;
-            HeldItemBeakerScript = null;
+            HeldItemScript = null;
         }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        if (collision.gameObject.tag == "Dungeon") return;
         float impulse = 0F;
         foreach (ContactPoint2D point in collision.contacts)
         {
@@ -173,11 +190,17 @@ public class Goblin : MonoBehaviour
     public void TakeDamage(float dmg)
     {
         Health -= dmg;
-        CameraController.instance.ShakeScreen(dmg);
+        //print("took damage??" + dmg);
+        if (dmg > 0.5f)
+        {
+            AudioManager.instance.PlaySound(AudioManager.SoundEffects.TakeDamage);
+            CameraController.instance.ShakeScreen(dmg * 2f);
+        }
         HUDManager.instance.UpdateHealth(Health);
         if (Health <= 0f)
-        {            
-            print("dead");
+        {
+            GameManager.instance.GameOver();
+            //print("dead");
         }
     }
 
@@ -196,7 +219,7 @@ public class Goblin : MonoBehaviour
         if (poisonList.Count > 0)
         {
             //print("poison Count: " + poisonList.Count);
-            TakeDamage(1 / 1000f / Time.deltaTime);
+            TakeDamage(1 / 800f / Time.deltaTime);
         }
         if (coldTimer > 0f)
         {

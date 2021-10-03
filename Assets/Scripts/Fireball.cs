@@ -10,7 +10,7 @@ public class Fireball : MonoBehaviour
     private void Start()
     {
         gameObject.transform.localScale = Vector3.zero;
-        LeanTween.scale(gameObject, Vector3.zero, 0.3f).setEaseInOutCirc();
+        LeanTween.scale(gameObject, Vector3.one, 0.3f).setEaseInOutCirc();
     }
 
     private void Update()
@@ -25,10 +25,11 @@ public class Fireball : MonoBehaviour
         Goblin g = collision.gameObject.GetComponent<Goblin>();
         if (b != null)
         {
-            b.TakeDamage(damage);
+            b.TakeDamage(damage, false);
         }
         else if(g != null)
         {
+            print("giving fire damage to goblin");
             g.TakeDamage(damage);
         }
         Destroy(this.gameObject);

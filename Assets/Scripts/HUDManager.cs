@@ -17,7 +17,7 @@ public class HUDManager : MonoBehaviour
     public int DisplayScore;
     public int ActualScore;
 
-    public float ScoreFreezeTimerMax = 3f;
+    private float ScoreFreezeTimerMax = 2f;
     private float scoreFreezeTimer;
 
     //private List<Score> scoreList;
@@ -60,7 +60,9 @@ public class HUDManager : MonoBehaviour
         DisplayScore = 0;
         ActualScore = 0;
         heartFill.fillAmount = 1f;
-        if(scoreGOList != null)
+        mainScore.text = DisplayScore.ToString();
+        UpdateLevel(1);
+        if (scoreGOList != null)
         {
             for (int i = scoreGOList.Count - 1; i >= 0; i--)
             {
@@ -73,6 +75,11 @@ public class HUDManager : MonoBehaviour
 
     public void UpdateLevel(int levelNumber)
     {
+        if (levelNumber != 1)
+        {
+            EffectsManager.instance.SplashBloom();
+            AudioManager.instance.PlaySound(AudioManager.SoundEffects.LevelUp);
+        }
         LevelCounterText.text = "Level " + levelNumber.ToString();
     }
 

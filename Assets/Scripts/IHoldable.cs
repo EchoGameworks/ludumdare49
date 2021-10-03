@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class IHoldable : MonoBehaviour
 {
+    public bool wasThrown;
     public Transform followPosition;
 
 
