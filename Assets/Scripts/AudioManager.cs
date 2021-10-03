@@ -65,6 +65,7 @@ public class AudioManager : MonoBehaviour
         {
             MasterSFXVolume = 0.4f;
             MasterMusicVolume = 0.4f;
+            
         }
         else if(MasterSFXVolume == 0.4f)
         {
@@ -76,6 +77,7 @@ public class AudioManager : MonoBehaviour
             MasterSFXVolume = 0f;
             MasterMusicVolume = 0f;
         }
+        currentSong.source.volume = MasterMusicVolume * currentSong.Volume;
     }
 
     public void PlaySong()
