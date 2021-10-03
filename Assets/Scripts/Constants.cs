@@ -6,6 +6,7 @@ namespace Constants
 {
     public enum ElementTypes { Fire, Ice, Earth, Poison, Electricity }
     public enum DamagedAmount { None, Small, Large }
+    public enum Difficulty { Tutorial, VeryEasy, Easy, Moderate, Hard, VeryHard }
 
     public static class Helpers
     {

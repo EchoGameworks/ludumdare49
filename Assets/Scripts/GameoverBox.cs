@@ -8,7 +8,8 @@ public class GameoverBox : MonoBehaviour
     {
         if(collision.gameObject.tag == "Player" || collision.gameObject.tag == "Beaker")
         {
-            print("gameover!");
+            GameManager.instance.GameOver();
+            print("gameover in Box!");
         }
     }
 }

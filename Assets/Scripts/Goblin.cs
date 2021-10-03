@@ -11,8 +11,9 @@ public class Goblin : MonoBehaviour
     GameManager gameManager;
 
     public float Health;
-    private float damageDampening = 4000f;
+    private float damageDampening = 5000f;
 
+    private SpriteRenderer spriteRend;
     [SerializeField] private float m_MoveSpeed = 6.5f;
     [SerializeField] private float m_JumpForce = 85f;
     [Range(0, .3f)] [SerializeField] private float m_MovementSmoothing = .01f;
@@ -42,17 +43,27 @@ public class Goblin : MonoBehaviour
     private Rigidbody2D HeldItemRB2D;
     private Beaker HeldItemBeakerScript;
 
+    [SerializeField]
+    private List<PoisonCloud> poisonList;
+
+    private float coldTimerMax;
+    private float coldTimer;
+    private float coldSlow = 0.5f;
+    private float coldSlowJump = 0.7f;
+
     void Start()
     {
         Health = 100f;
         m_Rigidbody2D = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        spriteRend = GetComponent<SpriteRenderer>();
         gameManager = GameManager.instance;
         ctrl = gameManager.ctrl;
         ctrl.Player.Move.performed += Move_performed;
         ctrl.Player.Jump.performed += Jump_performed;
         ctrl.Player.Action.performed += Action_performed;
         ctrl.Player.Move.canceled += Move_canceled;
+        poisonList = new List<PoisonCloud>();
     }
 
     private void Move_canceled(InputAction.CallbackContext obj)
@@ -64,12 +75,12 @@ public class Goblin : MonoBehaviour
     {
         if(HeldItem != null)
         {
-            print("throw");
+            //print("throw");
             Throw();
         }
         else
         {
-            print("pickup");
+            //print("pickup");
             Pickup();
         }
     }
@@ -152,15 +163,49 @@ public class Goblin : MonoBehaviour
         //Debug.Log(impact);
     }
 
-    private void TakeDamage(float dmg)
+    public void Freeze(Score score)
+    {
+        coldTimerMax = score.Value * 1f;
+        coldTimer = coldTimerMax;
+        spriteRend.color = new Color(0.6f, .45f, 1f, 1f);
+    }
+
+    public void TakeDamage(float dmg)
     {
         Health -= dmg;
+        CameraController.instance.ShakeScreen(dmg);
         HUDManager.instance.UpdateHealth(Health);
         if (Health <= 0f)
         {            
             print("dead");
         }
+    }
 
+    public void AddPoison(PoisonCloud pc)
+    {
+        poisonList.Add(pc);
+    }
+
+    public void RemovePoison(PoisonCloud pc)
+    {
+        poisonList.Remove(pc);
+    }
+
+    private void Update()
+    {
+        if (poisonList.Count > 0)
+        {
+            //print("poison Count: " + poisonList.Count);
+            TakeDamage(1 / 1000f / Time.deltaTime);
+        }
+        if (coldTimer > 0f)
+        {
+            coldTimer -= Time.deltaTime;
+        }
+        else
+        {
+            spriteRend.color = new Color(1f, 1f, 1f, 1f);
+        }
     }
 
     private void FixedUpdate()
@@ -180,12 +225,14 @@ public class Goblin : MonoBehaviour
             }
         }
 
+
         Move();
     }
 
     public void Move()
     {
-        float finalMove = move;
+
+        float finalMove = (coldTimer > 0f) ? move * coldSlow : move;
 
 
         if (m_Grounded || m_AirControl)
@@ -227,7 +274,15 @@ public class Goblin : MonoBehaviour
             // Add a vertical force to the player.
             jump = false;
             m_Grounded = false;
-            m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce), ForceMode2D.Impulse);
+            if(coldTimer > 0)
+            {
+                m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce * coldSlowJump), ForceMode2D.Impulse);
+            }
+            else
+            {
+                m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce), ForceMode2D.Impulse);
+            }
+            
             anim.SetBool("IsJumping", true);
 
         }

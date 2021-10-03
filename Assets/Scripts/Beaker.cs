@@ -25,13 +25,14 @@ public class Beaker : IHoldable
     GameObject DestroyedAnimation;
 
     public Transform BeakerListContainer;
-    
+    public GameObject prefabPoisonCloudManager;
+    public GameObject prefabBallLightening;
 
     public bool IsInCombo = false;
 
      void Awake()
     {
-        Element = (ElementTypes)Random.Range(0, 4);
+        Element = (ElementTypes)Random.Range(4, 4); //0,4
         waveSR.color = Helpers.GetElementColor(Element);        
         Health = 100f;
         DamageStatus = DamagedAmount.None;
@@ -64,7 +65,7 @@ public class Beaker : IHoldable
         //Debug.Log(impact);
     }
 
-    private void TakeDamage(float dmg)
+    public void TakeDamage(float dmg)
     {
         if (IsInCombo) return;
         Health -= dmg;
@@ -87,7 +88,7 @@ public class Beaker : IHoldable
 
     private void CreateCombo()
     {
-        print("creating combo: " + Element.ToString());
+        //print("creating combo: " + Element.ToString());
 
         
         IsInCombo = true;
@@ -95,13 +96,37 @@ public class Beaker : IHoldable
         BeakersConnected.Add(this);
         TouchingBeakers(BeakersConnected);
        
-        print("Beakers Touching: " + BeakersConnected.Count);
+        //print("Beakers Touching: " + BeakersConnected.Count);
 
         Score score = new Score(Element, BeakersConnected.Count);
         HUDManager.instance.UpdateScore(score);
         for (int i = BeakersConnected.Count - 1; i > 0; i--)
         {
             BeakersConnected[i].PlayBreak();
+        }
+
+        switch (score.Element)
+        {
+            case ElementTypes.Fire:
+                FireballManager.instance.SpawnFireballs(score);
+                break;
+            case ElementTypes.Electricity:
+                GameObject blGO = Instantiate(prefabBallLightening, this.transform.position, Quaternion.identity, null);
+                BallLightening bl = blGO.GetComponent<BallLightening>();
+                bl.SetScoreMulti(score.Value);
+                break;
+            case ElementTypes.Earth:
+                BoulderSpawner.instance.SpawnBoulders(score);
+                break;
+            case ElementTypes.Ice:
+                GameObject player = GameObject.FindGameObjectWithTag("Player");
+                player.GetComponent<Goblin>().Freeze(score);
+                break;
+            case ElementTypes.Poison:
+                GameObject pcmGO = Instantiate(prefabPoisonCloudManager, this.transform.position, Quaternion.identity, null);
+                PoisonCloudManager pcm = pcmGO.GetComponent<PoisonCloudManager>();
+                pcm.SpawnCloud(score);
+                break;
         }
 
         PlayBreak();
@@ -129,9 +154,11 @@ public class Beaker : IHoldable
         if (DestroyedAnimation != null)
         {
             GameObject explosionGO = Instantiate(DestroyedAnimation, this.transform.position, Quaternion.Euler(0f, 0f, Random.Range(0.0f, 360.0f)), null);
-            explosionGO.GetComponent<SpriteRenderer>().color = Helpers.GetElementColor(Element);
-            Destroy(explosionGO, 0.5f);
+            explosionGO.GetComponent<SpriteRenderer>().color = Helpers.GetElementColor(Element);            
         }
+
         Destroy(this.gameObject);
+        
+
     }
 }

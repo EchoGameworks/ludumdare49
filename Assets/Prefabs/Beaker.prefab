@@ -98,6 +98,8 @@ MonoBehaviour:
   rb2d: {fileID: 0}
   DestroyedAnimation: {fileID: 4462701025128421226, guid: b8bde07d8a63c6e44a32b8d7f06481bf, type: 3}
   BeakerListContainer: {fileID: 0}
+  prefabPoisonCloudManager: {fileID: 8404209364536786060, guid: 7984b84e429577748a7bf383e0056fdf, type: 3}
+  prefabBallLightening: {fileID: 7864876289734862479, guid: 31bb89600d11bb94f98e522078e8cb26, type: 3}
   IsInCombo: 0
 --- !u!1 &4524803948391299180
 GameObject:
